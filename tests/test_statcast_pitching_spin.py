@@ -1,26 +1,47 @@
 import pybaseball.statcast_pitcher_spin as spin
 import unittest
 import pandas as pd
+import numpy as np
 import logging
 
 SIG_DIG = 4 # Required because of read_csv bug in pandas
+
+rounding_error_columns = ['vxR', 'vyR', 'vxbar', 'vybar', 'vbar']
 
 class TestStatcastPitchingSpinCalcs(unittest.TestCase):
 
 	# Helper Methods
 	def compare_columns(self, df1, df2, name):
-		return df1[name].round(SIG_DIG).equals(df2[name].round(SIG_DIG))
+		return df1[name].equals(df2[name])
 
 	def compare_almost_equal(self, df1, df2, name):
+		"""
+			Almost equal was necessary due to rounding errors that would result
+			from one value being calculated as .499999 and the next as .500000
+
+			Printing `comp_df.query('diff > 0.0000`) will show that only 1 or 2
+			values per calcuation rely on this function; the others are exactly
+			equal
+		"""
+
 		comp_df = pd.DataFrame()
 		comp_df['left'] = df1[name].round(SIG_DIG)
 		comp_df['right'] = df2[name].round(SIG_DIG)
 		comp_df['diff'] = comp_df['left'] - comp_df['right']
 		comp_df['diff'] = comp_df['diff'].abs().round(SIG_DIG)
+		# print(comp_df.query('diff > 0.0000'))
 		return comp_df.query('diff > .0001').empty
 
 	# Test Methods
 	def test_individual_calculations(self):
+		""" Testing Mechanism that compares test data to target data for each
+			calculation in the test_dict.
+
+			This structure was preferable to creating individual funciton test
+			because some values depend on the results of prior calculations
+		"""
+
+
 		test_frame = pd.read_csv('tests/statcast_spin/test_data.csv').round(SIG_DIG)
 		target_frame = pd.read_csv('tests/statcast_spin/target_data.csv').round(SIG_DIG)
 
@@ -35,7 +56,12 @@ class TestStatcastPitchingSpinCalcs(unittest.TestCase):
 			'find_magnus_acceleration_magnitude': ['amagx', 'amagy', 'amagz'],
 			'find_average_magnus_acceleration': ['amag'],
 			'find_magnus_magnitude': ['Mx', 'Mz'],
-			'find_spin_axis': ['phi'],
+			'find_phi': ['phi'],
+			'find_lift_coefficient': ['Cl'],
+			'find_spin_factor': ['S'],
+			'find_transverse_spin': ['spinT'],
+			'find_spin_efficiency': ['spin eff'],
+			'find_theta': ['theta'],
 		}
 
 		for method, columns in test_dict.items():
@@ -47,7 +73,7 @@ class TestStatcastPitchingSpinCalcs(unittest.TestCase):
 				logging.info("Begin testing on {}".format(column))
 
 				try:
-					if column in ['vybar','vbar', 'adrag', 'amagx', 'amagy', 'amagz', 'amag', 'Mx', 'Mz']:
+					if column in rounding_error_columns:
 					# Almost equal assertion is necessary for small differences that arise after consecutive calculations
 						self.assertTrue(self.compare_almost_equal(test_frame, target_frame, column))
 
@@ -81,23 +107,20 @@ class TestStatcastPitchingSpinCalcs(unittest.TestCase):
 		df = spin.statcast_pitcher_spin(start_dt='2019-07-01', end_dt='2019-07-31', player_id=506433)
 
 		# Columns needed to be checked
-		columns = ['Mx', 'Mz', 'phi']
+		target_columns = ['Mx', 'Mz', 'phi', 'theta']
 
-		for column in columns:
+		for column in target_columns:
 			logging.info("Begin testing on {}".format(column))
 
-			try:
-				if column in ['vybar','vbar', 'adrag', 'amagx', 'amagy', 'amagz', 'amag', 'Mx', 'Mz']:
-				# Almost equal assertion is necessary for small differences that arise after consecutive calculations
-					self.assertTrue(self.compare_almost_equal(df, template_data, column))
 
-				else:
-					self.assertTrue(self.compare_columns(df, template_data, column))
+			if column in ['Mz']:
+			# Almost equal assertion is necessary for small differences that arise after consecutive calculations
+				self.assertTrue(self.compare_almost_equal(df, template_data, column))
 
-				logging.info("{} passed".format(df, template_data, column))
+			else:
+				self.assertTrue(self.compare_columns(df, template_data, column))
 
+			logging.info("{} passed".format(df, template_data, column))
 
-			except Exception:
-				logging.exception("Tests on {} have failed".format(column))
 
 		logging.info("All tests completed")
