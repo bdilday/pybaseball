@@ -3,6 +3,7 @@
 
 [tool.pylint.'MESSAGES CONTROL']
 disable = [
+    "invalid-name",
     "logging-fstring-interpolation",
     "missing-module-docstring"
 ]

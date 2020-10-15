@@ -1,29 +1,11 @@
 import os
 import urllib.parse
-from typing import Any, Callable, Dict, List, Union
+from typing import Callable, Dict, Union
 from unittest.mock import MagicMock
 
-import pandas as pd
 import pytest
 import requests
 from _pytest.monkeypatch import MonkeyPatch
-from typing_extensions import Protocol
-
-_ParseDates = Union[bool, List[int], List[str], List[List], Dict]
-
-# The Protocol class below is to be sure that we are passing the correct kind of Callable around in our tests.
-# These are validated by MyPy at test time. Not at runtime (Python does not do runtime type checking).
-# Protocols are a way to define that when we pass a function around
-# (like we do in these tests to pass the functions in to load data),
-# that the function sent over will take the correct typed parameters,
-# and return the correct types.
-# So in this instance we're defining that the type GetDataFrameCallable is a function that will
-# take the params defined in __call__ and the return type defined in __call__.
-# Further reading: https://docs.python.org/3/library/typing.html#typing.Protocol
-
-
-class GetDataFrameCallable(Protocol):
-    def __call__(self, filename: str, parse_dates: _ParseDates = False) -> pd.DataFrame: ...
 
 
 # Autouse to prevent integration tests sneaking into the unit tests
@@ -96,52 +78,6 @@ def _remove(monkeypatch: MonkeyPatch, logging_side_effect: Callable) -> MagicMoc
     mock = MagicMock(side_effect=logging_side_effect('os.remove'))
     monkeypatch.setattr(os, 'remove', mock)
     return mock
-
-
-@pytest.fixture()
-def data_dir() -> str:
-    """
-        Returns the path to the tests data directory
-    """
-    this_dir = os.path.dirname(os.path.realpath(__file__))
-    return os.path.join(this_dir, 'data')
-
-
-@pytest.fixture()
-def get_data_file_contents(data_dir: str) -> Callable[[str], str]:
-    """
-        Returns a function that will allow getting the contents of a file in the tests data directory easily
-    """
-    def get_contents(filename: str) -> str:
-        """
-            Get the str contents of a file in the tests data directory
-
-
-            ARGUMENTS:
-            filename    : str : the name of the file within the tests data directory to get the contents of
-        """
-        with open(os.path.join(data_dir, filename)) as _file:
-            return _file.read()
-
-    return get_contents
-
-
-@pytest.fixture()
-def get_data_file_dataframe(data_dir: str) -> GetDataFrameCallable:
-    """
-        Returns a function that will allow getting a dataframe from a csv file in the tests data directory easily
-    """
-    def get_dataframe(filename: str, parse_dates: _ParseDates = False) -> pd.DataFrame:
-        """
-            Get the DatFrame representation of the contents of a csv file in the tests data directory
-
-
-            ARGUMENTS:
-            filename    : str : the name of the file within the tests data directory to load into a DataFrame
-        """
-        return pd.read_csv(os.path.join(data_dir, filename), index_col=0, parse_dates=parse_dates).reset_index(drop=True)
-
-    return get_dataframe
 
 
 @pytest.fixture()
