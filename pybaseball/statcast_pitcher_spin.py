@@ -6,7 +6,7 @@ import pandas as pd
 from pybaseball import statcast_pitcher
 
 K = .005153  # Environmental Constant
-SIG_DIG = 4
+SIG_DIG = 12
 
 
 def statcast_pitcher_spin(start_dt: Optional[str] = None, end_dt: Optional[str] = None,

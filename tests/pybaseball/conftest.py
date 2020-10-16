@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 import pytest
 import requests
 from _pytest.monkeypatch import MonkeyPatch
-
+from ..conftest import GetDataFrameCallable
 
 # Autouse to prevent integration tests sneaking into the unit tests
 @pytest.fixture(autouse=True)
