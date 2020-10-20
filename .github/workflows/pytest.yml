@@ -21,10 +21,11 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -e .[test]
+      - name: Timing test
+        timeout-minutes: 1
+        run: python -m scripts.statcast_timing --start-date 2018-04-01 --end-date 2018-09-30 
       - name: Run tests
         run: pytest tests --doctest-modules --cov=pybaseball --cov-report term-missing
-      - name: Timing test
-        run: python -m scripts.statcast_timing
       - name: Run MyPy
         run: mypy .
         continue-on-error: true
