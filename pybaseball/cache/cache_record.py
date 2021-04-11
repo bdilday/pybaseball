@@ -35,7 +35,7 @@ class CacheRecord:
             data['expires'] = str(expires)
 
         self.data = cast(Dict, data)
-        base = self.data.get('func', 'unknown_call') + str(datetime.now().timestamp())
+        base = self.data.get('func', 'unknown_call') #+ str(int(datetime.now().timestamp()))
         base = os.path.join(cfg.cache_directory, base)
         frame_name = base + '.' + cfg.cache_type
         self.data['dataframe'] = frame_name
