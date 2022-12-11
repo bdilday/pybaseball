@@ -1,3 +1,4 @@
+.PHONY: bump-version
 ACT_FLAGS :=
 LOG_LEVEL := INFO
 MYPY_RUN_AGAINST_DEFAULT := *.py pybaseball tests
@@ -49,3 +50,6 @@ endif
 
 upgrade-pip:
 	pip install --upgrade pip
+
+bump-version:
+	bump2version patch
