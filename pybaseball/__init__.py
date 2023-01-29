@@ -97,4 +97,4 @@ from .plotting import spraychart
 from .datasources.fangraphs import (fg_batting_data, fg_pitching_data, fg_team_batting_data, fg_team_fielding_data,
                                     fg_team_pitching_data)
 from .split_stats import get_splits
-__version__ = "2.2.4"
+__version__ = "2.2.5"
